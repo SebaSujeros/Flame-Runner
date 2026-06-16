@@ -20,7 +20,7 @@ export default class MenuScene extends Phaser.Scene {
         }).setOrigin(0.5);
 
         this.add.text(cx, cy - 40, 'Realmente está mal?', {
-            fontSize: '13px', fill: '#aaccff',
+            fontSize: '13px', fill: '#000000',
             fontFamily: 'monospace', fontStyle: 'italic'
         }).setOrigin(0.5);
 

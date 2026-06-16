@@ -3,7 +3,7 @@
 export default class HUD {
     constructor(scene) {
         this.scene = scene;
-        const s = { fontSize: '14px', fill: '#ffffff', fontFamily: 'monospace' };
+        const s = { fontSize: '14px', fill: '#000000', fontFamily: 'monospace' };
 
         this.txtPuntos = scene.add.text(10, 8,  'Puntos: 0',     s).setScrollFactor(0).setDepth(20);
         this.txtVidas  = scene.add.text(10, 26, 'Vidas: 3',      s).setScrollFactor(0).setDepth(20);
