@@ -14,7 +14,7 @@ export default class GameOverScene extends Phaser.Scene {
 
         this.add.rectangle(cx, cy, this.scale.width, this.scale.height, 0x040810);
 
-        this.add.text(cx, cy - 70, '❄️ TE CONGELASTE', {
+        this.add.text(cx, cy - 70, 'TE CONGELASTE', {
             fontSize: '32px', fill: '#88ccff',
             fontFamily: 'monospace', fontStyle: 'bold'
         }).setOrigin(0.5);

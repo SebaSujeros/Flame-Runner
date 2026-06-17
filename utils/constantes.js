@@ -7,6 +7,6 @@ export const ESCENAS = {
 
 export const PUNTOS_INICIO        = 100;
 export const PUNTOS_POR_NPC       = 100;
-export const PUNTOS_DECAY_POR_SEG = 5;
+export const PUNTOS_DECAY_POR_SEG = 20;
 export const VIDAS_INICIALES      = 3;
 export const MIN_NPCS_LEVEL1      = 3;   // mínimo para pasar el nivel

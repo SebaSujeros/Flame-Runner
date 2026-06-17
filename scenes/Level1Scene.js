@@ -12,6 +12,7 @@ export default class Level1Scene extends Phaser.Scene {
         this.npcsTotalesSalvados = data.npcsTotalesSalvados ?? 0;
         this.npcsSalvadosNivel   = 0;
         this.npcsEnNivel         = 0;
+        this.terminando          = false;
     }
 
     preload() {
@@ -26,30 +27,27 @@ export default class Level1Scene extends Phaser.Scene {
         const W = this.scale.width;
         const H = this.scale.height;
 
-        // Fondo en código, no en Tiled
         this.add.image(W / 2, H / 2, 'bg').setDisplaySize(W, H).setScrollFactor(0).setDepth(-1);
 
-        // ── Tilemap ───────────────────────────────────────────────────
+        // Tilemap
         const map     = this.make.tilemap({ key: 'lvl1' });
         const tileset = map.addTilesetImage('tileset', 'tileset');
-
         const capaTiles = map.createLayer('tiles', tileset, 0, 0);
         capaTiles.setCollisionByProperty({ colision: true });
 
-        // ── Objetos del mapa ──────────────────────────────────────────
-        const objetos  = map.getObjectLayer('objetos').objects;
-        const spawnJug = objetos.find(o => o.name === 'jugador');
-        const spawnMeta= objetos.find(o => o.name === 'meta');
-        const spawnsNPC= objetos.filter(o => o.name === 'npc');
+        // objt
+        const objetos   = map.getObjectLayer('objetos').objects;
+        const spawnJug  = objetos.find(o => o.name === 'jugador');
+        const spawnMeta = objetos.find(o => o.name === 'meta');
+        const spawnsNPC = objetos.filter(o => o.name === 'npc');
 
-        // ── Jugador ───────────────────────────────────────────────────
+        // Player
         this.jugador = new Jugador(this, spawnJug.x, spawnJug.y);
         this.physics.add.collider(this.jugador.getSprite(), capaTiles);
 
-        // ── NPCs ──────────────────────────────────────────────────────
+        // npcsmssmsmsmsms
         this.npcs = spawnsNPC.map(s => new NPC(this, s.x, s.y));
         this.npcsEnNivel = this.npcs.length;
-
         this.npcs.forEach(npc => {
             this.physics.add.collider(npc.getSprite(), capaTiles);
             this.physics.add.overlap(
@@ -58,37 +56,34 @@ export default class Level1Scene extends Phaser.Scene {
             );
         });
 
-        // ── Meta ──────────────────────────────────────────────────────
-        this.meta = this.physics.add.sprite(spawnMeta.x, spawnMeta.y, 'tileset');
-        this.meta.body.setImmovable(true);
-        this.meta.body.allowGravity = false;
-        this.meta.setAlpha(0);   // invisible, la flecha ya está en el tilemap
-
+        // Meeta
+        const metaRect = this.add.rectangle(spawnMeta.x, spawnMeta.y, 20, 40);
+        this.physics.add.existing(metaRect, true);
+        this.meta = metaRect;
         this.physics.add.overlap(
             this.jugador.getSprite(), this.meta,
             () => this._checkMeta()
         );
 
-        // ── HUD y cámara ──────────────────────────────────────────────
+        // Hud y camara
         this.hud = new HUD(this);
         this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
         this.physics.world.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
         this.cameras.main.startFollow(this.jugador.getSprite(), true, 0.1, 0.1);
+        this.cameras.main.fadeIn(400, 0, 0, 0);
 
-        // ── Decay de fuego ────────────────────────────────────────────
         this.time.addEvent({
-            delay: 1000,
-            callback: this._decayPuntos,
-            callbackScope: this,
-            loop: true
+            delay: 1000, callback: this._decayPuntos,
+            callbackScope: this, loop: true
         });
 
-        this.add.text(10, H - 20, 'NIVEL 1 — Encontrá y salvá a todos los congelados', {
+        this.add.text(10, H - 16, 'NIVEL 1 — Salvá a los congelados y llegá a la meta', {
             fontSize: '10px', fill: '#556677', fontFamily: 'monospace'
         }).setScrollFactor(0).setDepth(20);
     }
 
     update() {
+        if (this.terminando) return;
         this.jugador.update();
         this.hud.actualizar(this.puntos, this.vidas, this.npcsSalvadosNivel, this.npcsEnNivel);
         if (this.vidas <= 0) this._gameOver();
@@ -102,28 +97,35 @@ export default class Level1Scene extends Phaser.Scene {
     }
 
     _checkMeta() {
-        if (this.npcsSalvadosNivel >= MIN_NPCS_LEVEL1) {
-            this.time.delayedCall(300, () => this._avanzarNivel());
-        }
+        if (this.terminando) return;
+        if (this.npcsSalvadosNivel >= MIN_NPCS_LEVEL1) this._avanzarNivel();
     }
 
     _decayPuntos() {
+        if (this.terminando) return;
         this.puntos = Math.max(0, this.puntos - PUNTOS_DECAY_POR_SEG);
         if (this.puntos <= 0) { this.vidas--; this.puntos = 100; }
     }
 
     _avanzarNivel() {
-        this.scene.start(ESCENAS.VICTORY, {   // cambiar a LEVEL2 cuando esté listo
-            puntos: this.puntos,
-            vidas:  this.vidas,
-            npcsSalvados: this.npcsTotalesSalvados + this.npcsSalvadosNivel
+        this.terminando = true;
+        this.cameras.main.fadeOut(600, 0, 0, 0);
+        this.cameras.main.once('camerafadeoutcomplete', () => {
+            this.scene.start(ESCENAS.VICTORY, {
+                puntos: this.puntos, vidas: this.vidas,
+                npcsSalvados: this.npcsTotalesSalvados + this.npcsSalvadosNivel
+            });
         });
     }
 
     _gameOver() {
-        this.scene.start(ESCENAS.GAMEOVER, {
-            puntos: this.puntos,
-            npcsSalvados: this.npcsTotalesSalvados + this.npcsSalvadosNivel
+        this.terminando = true;
+        this.cameras.main.fadeOut(600, 0, 0, 0);
+        this.cameras.main.once('camerafadeoutcomplete', () => {
+            this.scene.start(ESCENAS.GAMEOVER, {
+                puntos: this.puntos,
+                npcsSalvados: this.npcsTotalesSalvados + this.npcsSalvadosNivel
+            });
         });
     }
 }

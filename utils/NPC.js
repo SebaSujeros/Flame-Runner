@@ -1,7 +1,3 @@
-// NPC.js
-// spritesheet: npc.png — 288x64, frames 32x64
-// frames 0-7: idle (8 frames), frame 8: descongelado
-
 export default class NPC {
     constructor(scene, x, y) {
         this.scene   = scene;
