@@ -1,7 +1,3 @@
-// Jugador.js
-// spritesheet: prota.png — 216x64, frames 36x64
-// frame 0-1: idle (2 frames), frame 2-5: walk (4 frames)
-
 export default class Jugador {
     constructor(scene, x, y) {
         this.scene = scene;
