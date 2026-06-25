@@ -1,10 +1,12 @@
-import { ESCENAS, PUNTOS_POR_NPC, PUNTOS_DECAY_POR_SEG, MIN_NPCS_LEVEL1 } from '../utils/constantes.js';
+import { ESCENAS, PUNTOS_POR_NPC, PUNTOS_DECAY_POR_SEG } from '../utils/constantes.js';
 import Jugador from '../utils/Jugador.js';
 import NPC     from '../utils/NPC.js';
 import HUD     from '../utils/HUD.js';
 
-export default class Level1Scene extends Phaser.Scene {
-    constructor() { super({ key: ESCENAS.LEVEL1 }); }
+const MIN_NPCS_LEVEL2 = 3;
+
+export default class Level2Scene extends Phaser.Scene {
+    constructor() { super({ key: ESCENAS.LEVEL2 }); }
 
     init(data) {
         this.puntos              = data.puntos ?? 100;
@@ -18,7 +20,7 @@ export default class Level1Scene extends Phaser.Scene {
     preload() {
         this.load.image('bg',      'public/assets/bg.png');
         this.load.image('tileset', 'public/assets/tileset.png');
-        this.load.tilemapTiledJSON('lvl1', 'public/assets/tilemap/lvl1.json');
+        this.load.tilemapTiledJSON('lvl2', 'public/assets/tilemap/lvl2.json');
         this.load.spritesheet('prota', 'public/assets/prota.png', { frameWidth: 36, frameHeight: 64 });
         this.load.spritesheet('npc',   'public/assets/npc.png',   { frameWidth: 32, frameHeight: 64 });
     }
@@ -30,10 +32,10 @@ export default class Level1Scene extends Phaser.Scene {
         this.add.image(W / 2, H / 2, 'bg').setDisplaySize(W, H).setScrollFactor(0).setDepth(-1);
 
         // ── Tilemap ───────────────────────────────────────────────────
-        const map     = this.make.tilemap({ key: 'lvl1' });
-        const tileset = map.addTilesetImage('tileset', 'tileset');
-        const capaTiles = map.createLayer('tiles', tileset, 0, 0);
-        capaTiles.setCollisionByProperty({ colision: true });
+        const map       = this.make.tilemap({ key: 'lvl2' });
+        const tileset   = map.addTilesetImage('tileset', 'tileset');
+        this.capaTiles  = map.createLayer('tiles', tileset, 0, 0);
+        this.capaTiles.setCollisionByProperty({ colision: true });
 
         // ── Objetos ───────────────────────────────────────────────────
         const objetos   = map.getObjectLayer('objetos').objects;
@@ -43,13 +45,13 @@ export default class Level1Scene extends Phaser.Scene {
 
         // ── Jugador ───────────────────────────────────────────────────
         this.jugador = new Jugador(this, spawnJug.x, spawnJug.y);
-        this.physics.add.collider(this.jugador.getSprite(), capaTiles);
+        this.physics.add.collider(this.jugador.getSprite(), this.capaTiles);
 
         // ── NPCs ──────────────────────────────────────────────────────
         this.npcs = spawnsNPC.map(s => new NPC(this, s.x, s.y));
         this.npcsEnNivel = this.npcs.length;
         this.npcs.forEach(npc => {
-            this.physics.add.collider(npc.getSprite(), capaTiles);
+            this.physics.add.collider(npc.getSprite(), this.capaTiles);
             this.physics.add.overlap(
                 this.jugador.getSprite(), npc.getSprite(),
                 () => this._salvarNPC(npc)
@@ -57,10 +59,9 @@ export default class Level1Scene extends Phaser.Scene {
         });
 
         // ── Meta ──────────────────────────────────────────────────────
-        this.meta = this.physics.add.sprite(spawnMeta.x, spawnMeta.y, 'tileset');
-        this.meta.body.setImmovable(true);
-        this.meta.body.allowGravity = false;
-        this.meta.setAlpha(0);
+        const metaRect = this.add.rectangle(spawnMeta.x, spawnMeta.y, 20, 40);
+        this.physics.add.existing(metaRect, true);
+        this.meta = metaRect;
         this.physics.add.overlap(
             this.jugador.getSprite(), this.meta,
             () => this._checkMeta()
@@ -78,7 +79,7 @@ export default class Level1Scene extends Phaser.Scene {
             callbackScope: this, loop: true
         });
 
-        this.add.text(10, H - 16, 'NIVEL 1 — Salvá a los congelados y llegá a la meta', {
+        this.add.text(10, H - 16, 'NIVEL 2 — ¡Cuidado con las espinas!', {
             fontSize: '10px', fill: '#556677', fontFamily: 'monospace'
         }).setScrollFactor(0).setDepth(20);
     }
@@ -87,6 +88,17 @@ export default class Level1Scene extends Phaser.Scene {
         if (this.terminando) return;
         this.jugador.update();
         this.hud.actualizar(this.puntos, this.vidas, this.npcsSalvadosNivel, this.npcsEnNivel);
+
+        // Daño por espinas — overlap con tiles que tienen propiedad daño
+        this.capaTiles.forEachTile(tile => {
+            if (!tile || !tile.properties || !tile.properties.daño) return;
+            const jugSprite = this.jugador.getSprite();
+            const tileX = tile.pixelX + tile.width  / 2;
+            const tileY = tile.pixelY + tile.height / 2;
+            const dx = Math.abs(jugSprite.x - tileX);
+            const dy = Math.abs(jugSprite.y - tileY);
+            if (dx < tile.width / 2 + 8 && dy < tile.height / 2 + 8) this._morir();
+        }, this, 0, 0, this.capaTiles.width, this.capaTiles.height, { isNotEmpty: true });
     }
 
     _salvarNPC(npc) {
@@ -98,7 +110,7 @@ export default class Level1Scene extends Phaser.Scene {
 
     _checkMeta() {
         if (this.terminando) return;
-        if (this.npcsSalvadosNivel >= MIN_NPCS_LEVEL1) this._avanzarNivel();
+        if (this.npcsSalvadosNivel >= MIN_NPCS_LEVEL2) this._avanzarNivel();
     }
 
     _decayPuntos() {
@@ -110,6 +122,8 @@ export default class Level1Scene extends Phaser.Scene {
     _morir() {
         if (this.terminando) return;
         this.terminando = true;
+        this.puntos = 0;
+        this.hud.actualizar(this.puntos, this.vidas, this.npcsSalvadosNivel, this.npcsEnNivel);
         this.vidas--;
         this.jugador.getSprite().setVisible(false);
 
@@ -127,7 +141,7 @@ export default class Level1Scene extends Phaser.Scene {
             this.time.delayedCall(600, () => {
                 this.cameras.main.fadeOut(400, 0, 0, 0);
                 this.cameras.main.once('camerafadeoutcomplete', () => {
-                    this.scene.start(ESCENAS.LEVEL1, {
+                    this.scene.start(ESCENAS.LEVEL2, {
                         puntos: 100, vidas: this.vidas,
                         npcsTotalesSalvados: this.npcsTotalesSalvados
                     });
@@ -140,19 +154,8 @@ export default class Level1Scene extends Phaser.Scene {
         this.terminando = true;
         this.cameras.main.fadeOut(600, 0, 0, 0);
         this.cameras.main.once('camerafadeoutcomplete', () => {
-            this.scene.start(ESCENAS.LEVEL2, {
+            this.scene.start(ESCENAS.VICTORY, {   // cambiar a LEVEL3 cuando esté listo
                 puntos: this.puntos, vidas: this.vidas,
-                npcsTotalesSalvados: this.npcsTotalesSalvados + this.npcsSalvadosNivel
-            });
-        });
-    }
-
-    _gameOver() {
-        this.terminando = true;
-        this.cameras.main.fadeOut(600, 0, 0, 0);
-        this.cameras.main.once('camerafadeoutcomplete', () => {
-            this.scene.start(ESCENAS.GAMEOVER, {
-                puntos: this.puntos,
                 npcsSalvados: this.npcsTotalesSalvados + this.npcsSalvadosNivel
             });
         });
