@@ -57,10 +57,9 @@ export default class Level1Scene extends Phaser.Scene {
         });
 
         // ── Meta ──────────────────────────────────────────────────────
-        this.meta = this.physics.add.sprite(spawnMeta.x, spawnMeta.y, 'tileset');
-        this.meta.body.setImmovable(true);
-        this.meta.body.allowGravity = false;
-        this.meta.setAlpha(0);
+        const metaRect = this.add.rectangle(spawnMeta.x, spawnMeta.y, 20, 40);
+        this.physics.add.existing(metaRect, true);
+        this.meta = metaRect;
         this.physics.add.overlap(
             this.jugador.getSprite(), this.meta,
             () => this._checkMeta()

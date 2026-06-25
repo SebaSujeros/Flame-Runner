@@ -156,7 +156,7 @@ export default class Level2Scene extends Phaser.Scene {
         this.cameras.main.once('camerafadeoutcomplete', () => {
             this.scene.start(ESCENAS.LEVEL3, {   // cambiar a LEVEL3 cuando esté listo
                 puntos: this.puntos, vidas: this.vidas,
-                npcsSalvados: this.npcsTotalesSalvados + this.npcsSalvadosNivel
+                npcsTotalesSalvados: this.npcsTotalesSalvados + this.npcsSalvadosNivel
             });
         });
     }

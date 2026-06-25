@@ -19,9 +19,14 @@ export default class MenuScene extends Phaser.Scene {
             stroke: '#000000', strokeThickness: 4
         }).setOrigin(0.5);
 
-        this.add.text(cx, cy - 40, 'Realmente está mal?', {
+        this.add.text(cx, cy - 40, 'Quemá a los ciudadanos para salvarlos del frío', {
             fontSize: '13px', fill: '#000000',
             fontFamily: 'monospace', fontStyle: 'italic'
+        }).setOrigin(0.5);
+
+        this.add.text(cx, cy - 15, 'Quemá mínimo 3 ciudadanos para avanzar de nivel', {
+            fontSize: '11px', fill: '#000000',
+            fontFamily: 'monospace'
         }).setOrigin(0.5);
 
         const boton = this.add.text(cx, cy + 30, '[ JUGAR ]', {
@@ -37,7 +42,7 @@ export default class MenuScene extends Phaser.Scene {
             npcsTotalesSalvados: 0
         }));
 
-        this.add.text(cx, cy + 100, '← → moverse   ↑ saltar', {
+        this.add.text(cx, cy + 100, 'No tardes mucho porque te vas a congelar', {
             fontSize: '11px', fill: '#667788', fontFamily: 'monospace'
         }).setOrigin(0.5);
     }
