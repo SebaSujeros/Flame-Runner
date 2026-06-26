@@ -44,7 +44,7 @@ NPCs congelados: son ciudadanos inmóviles congelados distribuidos por cada nive
 Enemigos patrulleros (Nivel 3): son enemigos parecidos a cubos de hielo que se mueven horizontalmente entre dos puntos fijos. No persiguen al jugador, solo patrullan su rango. Matan a Jhonn al contacto y reinician el nivel.
 
 ## Link al juego
-[GitHub Pages — agregar link]
+Sitio web: https://sebasujeros.github.io/Flame-Runner/
 
 ## Ejecutar localmente
 Clonar el repositorio
